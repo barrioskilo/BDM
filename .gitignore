@@ -132,4 +132,4 @@ dmypy.json
 .pyre/
 
 # Data
-./data_sources/
+data_sources/
