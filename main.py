@@ -32,7 +32,9 @@ console_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-# Load environment variables from config.env
+
+
+# Load environment variables from config..env
 load_dotenv()
 
 # Define local data directory path from environment variables
@@ -63,7 +65,7 @@ def main():
 
     except Exception as e:
 
-        logger.error(f'Error occurred during data collection: {e}')
+        logger.exception(f'Error occurred during data collection: {e}')
 
 
 if __name__ == '__main__':
