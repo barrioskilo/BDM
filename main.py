@@ -11,6 +11,11 @@ logger.setLevel(logging.DEBUG)
 
 # Create file handler which logs debug messages
 log_file = os.path.join('logs', 'main.log')
+log_dir = os.path.dirname(log_file)
+
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
 file_handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=1024*1024, backupCount=5)
 file_handler.setLevel(logging.DEBUG)
 
