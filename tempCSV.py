@@ -13,12 +13,12 @@ csv_files = glob.glob(os.path.join(csv_dir, '*.csv'))
 hdfs_host = '10.4.41.36'
 hdfs_port = 9870
 hdfs_user = 'bdm'
-#hdfs_path = '/path/to/hdfs/destination'
+# hdfs_path = '/path/to/hdfs/destination'
 
 # Create a connection to HDFS
-client = InsecureClient(f'http://{hdfs_host}:{hdfs_port}', user=hdfs_user)
-print('The conection has been properly established.')
-#print(client.list('./'))
+client = InsecureClient(f'https://{hdfs_host}:{hdfs_port}', user=hdfs_user)
+print('The connection has been properly established.')
+# print(client.list('./'))
 
 # Define directory path
 temp_CSV_dir_path = '/temporal_landing_CSV'

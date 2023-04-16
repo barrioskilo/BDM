@@ -13,11 +13,11 @@ json_files = glob.glob(os.path.join(json_dir, '*.json'))
 hdfs_host = '10.4.41.36'
 hdfs_port = 9870
 hdfs_user = 'bdm'
-#hdfs_path = '/path/to/hdfs/destination'
+# hdfs_path = '/path/to/hdfs/destination'
 
 # Create a connection to HDFS
-client = InsecureClient(f'http://{hdfs_host}:{hdfs_port}', user=hdfs_user)
-print('The conection has been properly established.')
+client = InsecureClient(f'https://{hdfs_host}:{hdfs_port}', user=hdfs_user)
+print('The connection has been properly established.')
 print(client.list('./'))
 
 # Define directory path
@@ -30,7 +30,6 @@ if client.status(temp_JSON_dir_path, strict=False) is None:
     print(f"Directory {temp_JSON_dir_path} created successfully.")
 else:
     print(f"Directory {temp_JSON_dir_path} already exists.")
-
 
 # Loop through JSON files in local directory
 for filename in os.listdir(json_dir):
