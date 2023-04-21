@@ -4,6 +4,7 @@ import json
 import glob
 import logging
 from hdfs import InsecureClient
+import requests
 
 
 class DataCollector:
@@ -38,7 +39,7 @@ class DataCollector:
                 Uploads all JSON files in the local JSON directory to the specified HDFS directory.
         """
 
-    def __init__(self, global_data_dir, temporal_landing_dir, hdfs_host, hdfs_port, hdfs_user, logger):
+    def __init__(self, global_data_dir, temporal_landing_dir, temporal_landing_csv, temporal_landing_json, hdfs_host, hdfs_port, hdfs_user, logger):
         """
             Initializes a new instance of the DataCollector class.
 
@@ -53,6 +54,8 @@ class DataCollector:
         """
         self.global_data_dir = global_data_dir.replace('\\', '/')
         self.temporal_landing_dir = temporal_landing_dir.replace('\\', '/')
+        self.temporal_landing_csv = temporal_landing_csv.replace('\\', '/')
+        self.temporal_landing_json = temporal_landing_json.replace('\\', '/')
         self.hdfs_host = hdfs_host
         self.hdfs_port = hdfs_port
         self.hdfs_user = hdfs_user
@@ -147,5 +150,50 @@ class DataCollector:
             filepath = filepath.replace('\\', '/')
             self.logger.info(f"File {filepath} uploaded to {hdfs_file_path} successfully.")
 
-    def new_source(self, hdfs_dir):
-        print('Brad Pit')
+    def new_source(self):
+        # Replace <YOUR_DATASET_ID> with the ID of the dataset you want to download
+        dataset_id = 'est_vehicles_index_motor'
+
+        # Replace <YOUR_API_KEY> with your Open Data BCN API key
+        api_key = '0a08a88cdf46a8c6ad57afe06bd9913812b7ff530fe1361aaeea4701ef1c1dbd'
+
+        # Set the URL of the API endpoint to download the dataset
+        url = f'https://opendata-ajuntament.barcelona.cat/data/api/3/action/package_show?id={dataset_id}'
+
+        # Set the headers for the API request
+        headers = {'Authorization': api_key}
+
+        # Send the API request to get information about the dataset
+        response = requests.get(url, headers=headers)
+
+        # Get the name of the dataset from the response
+        resources = response.json()['result']['resources']
+
+        data_name = []
+
+        for r in resources:
+            # Get the URL of the CSV file from the response
+            csv_url = r['url']
+
+            # Get the name of our dataset
+            name = r['name']
+
+            # Check the extension according to the name
+            if name.endswith('.csv'):
+                print('The file is a CSV file.')
+                x = name.split(".")[0].split("_")[1:]
+                data_name_str ="_".join(x)  # merge the relevant parts into a single string
+                newf = os.path.join(self.temporal_landing_dir,self.temporal_landing_csv, data_name_str).replace('\\', '/')
+
+                self.create_hdfs_dir(newf)
+
+            else:
+                print('The file is not a CSV file.')
+
+            # Download the CSV file and save it to disk
+            response = requests.get(csv_url)
+
+            filepath = os.path.join(newf, name).replace('\\', '/')
+            with self.client.write(filepath, overwrite=True) as writer:
+                writer.write(response.content)
+

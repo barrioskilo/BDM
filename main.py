@@ -57,14 +57,18 @@ def main():
         data_collector = DataCollector(
                 GLOBAL_DATA_DIR_PATH,
                 TEMPORAL_LANDING_DIR_PATH,
+                TEMPORAL_LANDING_CSV_DIR_PATH,
+                TEMPORAL_LANDING_JSON_DIR_PATH,
                 HDFS_HOST,
                 HDFS_PORT,
                 HDFS_USER,
                 logger)
 
         # Run the data collection functions
-        data_collector.upload_csv_files_to_hdfs(TEMPORAL_LANDING_CSV_DIR_PATH)
-        data_collector.upload_json_files_to_hdfs(TEMPORAL_LANDING_JSON_DIR_PATH)
+        #data_collector.upload_csv_files_to_hdfs(TEMPORAL_LANDING_CSV_DIR_PATH)
+        #data_collector.upload_json_files_to_hdfs(TEMPORAL_LANDING_JSON_DIR_PATH)
+        data_collector.new_source()
+
 
         logger.info('Data collection completed successfully.')
 
