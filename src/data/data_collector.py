@@ -146,3 +146,6 @@ class DataCollector:
 
             filepath = filepath.replace('\\', '/')
             self.logger.info(f"File {filepath} uploaded to {hdfs_file_path} successfully.")
+
+    def new_source(self, hdfs_dir):
+        print('Brad Pit')
