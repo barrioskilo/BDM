@@ -1,6 +1,6 @@
 # Big Data Management - Universitat Politècnica de Catalunya
 ## Implementation of a (Big) Data Management Backbone
-### Barcelona Rentals and Territorial Income Distribution
+### Barcelona Rentals - Territorial Income Distribution - Vehicle Motorization Index 
 ***
 ### Instructions for Executing the Code
 
@@ -28,8 +28,16 @@
     TEMPORAL_LANDING_JSON_DIR_PATH= 'temporal_landing_JSON'
     OPEN_DATA_API_KEY= '...' # Change This
     ```
-- Execute `main.py`
+- For executing `data-collection` functionality in order to move data from the local machine or the Open Data BCN API to HDFS, make use of the following command:
+  - ``` 
+    python main.py data-collection
+    ```
+- Otherwise, for executing `persistence-loading` functionality in order to move the available data of the `Temporal Landing Zone` to the `Persistence Landing Zone`, use the following command:
+  - ```
+    python main.py persistence-loading
+    ```
 
 ### Limitations
+  
 There is a problem with `macOS` systems (mainly with the paths), and it needs to be investigated.
 Execution in `Windows` machines is completed smoothly.
