@@ -1,8 +1,6 @@
 import logging.handlers
 import os
-
 from dotenv import load_dotenv
-
 from src.data.data_collector import DataCollector
 
 # Create logger object
@@ -65,9 +63,9 @@ def main():
                 logger)
 
         # Run the data collection functions
-        #data_collector.upload_csv_files_to_hdfs(TEMPORAL_LANDING_CSV_DIR_PATH)
-        #data_collector.upload_json_files_to_hdfs(TEMPORAL_LANDING_JSON_DIR_PATH)
-        data_collector.new_source()
+        data_collector.upload_csv_files_to_hdfs(TEMPORAL_LANDING_CSV_DIR_PATH)
+        data_collector.upload_json_files_to_hdfs(TEMPORAL_LANDING_JSON_DIR_PATH)
+        data_collector.download_from_opendata_API_to_hdfs()
 
 
         logger.info('Data collection completed successfully.')

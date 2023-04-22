@@ -39,7 +39,8 @@ class DataCollector:
                 Uploads all JSON files in the local JSON directory to the specified HDFS directory.
         """
 
-    def __init__(self, global_data_dir, temporal_landing_dir, temporal_landing_csv, temporal_landing_json, hdfs_host, hdfs_port, hdfs_user, logger):
+    def __init__(self, global_data_dir, temporal_landing_dir, temporal_landing_csv, temporal_landing_json, hdfs_host,
+                 hdfs_port, hdfs_user, logger):
         """
             Initializes a new instance of the DataCollector class.
 
@@ -78,6 +79,25 @@ class DataCollector:
         else:
             self.logger.info(f"Directory {folder} already exists.")
 
+    def upload_file_to_hdfs(self, filepath, data_bytes, hdfs_dir_path):
+        """
+        Uploads a file to HDFS directory using the given file path, data bytes, and HDFS directory path.
+
+        Args:
+            filepath (str): The path of the file to upload.
+            data_bytes (bytes): The data bytes of the file to upload.
+            hdfs_dir_path (str): The HDFS directory path where the file will be uploaded.
+
+        Returns:
+            None.
+        """
+        hdfs_file_path = os.path.join(hdfs_dir_path, os.path.basename(filepath)).replace('\\', '/')
+        with self.client.write(hdfs_file_path, overwrite=True) as writer:
+            writer.write(data_bytes)
+
+        filepath = filepath.replace('\\', '/')
+        self.logger.info(f"File {filepath} uploaded to {hdfs_file_path} successfully.")
+
     def upload_csv_files_to_hdfs(self, hdfs_dir):
         """
             Uploads all CSV files in the local CSV directory to the specified HDFS directory.
@@ -106,12 +126,7 @@ class DataCollector:
                 data_bytes = bytes('\n'.join([','.join(row) for row in csv_reader]), encoding='utf-8')
 
             # Upload CSV file to HDFS directory
-            hdfs_file_path = os.path.join(hdfs_dir_path, os.path.basename(filepath)).replace('\\', '/')
-            with self.client.write(hdfs_file_path, overwrite=True) as writer:
-                writer.write(data_bytes)
-
-            filepath = filepath.replace('\\', '/')
-            self.logger.info(f"File {filepath} uploaded to {hdfs_file_path} successfully.")
+            self.upload_file_to_hdfs(filepath, data_bytes, hdfs_dir_path)
 
     def upload_json_files_to_hdfs(self, hdfs_dir):
         """
@@ -143,14 +158,9 @@ class DataCollector:
             data_bytes = json.dumps(data).encode('utf-8')
 
             # Upload JSON file to HDFS directory
-            hdfs_file_path = os.path.join(hdfs_dir_path, os.path.basename(filepath)).replace('\\', '/')
-            with self.client.write(hdfs_file_path, overwrite=True) as writer:
-                writer.write(data_bytes)
+            self.upload_file_to_hdfs(filepath, data_bytes, hdfs_dir_path)
 
-            filepath = filepath.replace('\\', '/')
-            self.logger.info(f"File {filepath} uploaded to {hdfs_file_path} successfully.")
-
-    def new_source(self):
+    def download_from_opendata_API_to_hdfs(self):
         # Replace <YOUR_DATASET_ID> with the ID of the dataset you want to download
         dataset_id = 'est_vehicles_index_motor'
 
@@ -169,8 +179,6 @@ class DataCollector:
         # Get the name of the dataset from the response
         resources = response.json()['result']['resources']
 
-        data_name = []
-
         for r in resources:
             # Get the URL of the CSV file from the response
             csv_url = r['url']
@@ -179,21 +187,16 @@ class DataCollector:
             name = r['name']
 
             # Check the extension according to the name
-            if name.endswith('.csv'):
-                print('The file is a CSV file.')
-                x = name.split(".")[0].split("_")[1:]
-                data_name_str ="_".join(x)  # merge the relevant parts into a single string
-                newf = os.path.join(self.temporal_landing_dir,self.temporal_landing_csv, data_name_str).replace('\\', '/')
-
-                self.create_hdfs_dir(newf)
-
-            else:
-                print('The file is not a CSV file.')
+            x = name.split(".")[0].split("_")[1:]
+            data_name_str = "_".join(x)  # merge the relevant parts into a single string
+            new_folder = os.path. \
+                join(self.temporal_landing_dir, self.temporal_landing_csv, data_name_str). \
+                replace('\\', '/')
+            self.create_hdfs_dir(new_folder)
 
             # Download the CSV file and save it to disk
             response = requests.get(csv_url)
 
-            filepath = os.path.join(newf, name).replace('\\', '/')
+            filepath = os.path.join(new_folder, name).replace('\\', '/')
             with self.client.write(filepath, overwrite=True) as writer:
                 writer.write(response.content)
-
