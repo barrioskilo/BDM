@@ -39,7 +39,8 @@ class DataCollector:
                 Uploads all JSON files in the local JSON directory to the specified HDFS directory.
         """
 
-    def __init__(self, global_data_dir, temporal_landing_dir, temporal_landing_csv, temporal_landing_json, hdfs_host,
+    def __init__(self, global_data_dir, temporal_landing_dir, temporal_landing_csv, temporal_landing_json,
+                 open_data_api_key, hdfs_host,
                  hdfs_port, hdfs_user, logger):
         """
             Initializes a new instance of the DataCollector class.
@@ -47,7 +48,12 @@ class DataCollector:
             Args:
                 global_data_dir (str): Path to the directory containing the data sources files to upload.
                 temporal_landing_dir (str): Path to the temporal landing directory of HDFS where the data sources files
-                will be uploaded.
+                    will be uploaded.
+                temporal_landing_csv (str): Path to the temporal landing directory of HDFS where CSV files will be
+                    uploaded.
+                temporal_landing_json (str): Path to the temporal landing directory of HDFS where JSON files will be
+                    uploaded.
+                open_data_api_key (str): API authentication key for Open Data BCN API.
                 hdfs_host (str): Hostname or IP address of the HDFS Namenode.
                 hdfs_port (str): Port number of the HDFS Namenode.
                 hdfs_user (str): Username to use when connecting to HDFS.
@@ -57,6 +63,7 @@ class DataCollector:
         self.temporal_landing_dir = temporal_landing_dir.replace('\\', '/')
         self.temporal_landing_csv = temporal_landing_csv.replace('\\', '/')
         self.temporal_landing_json = temporal_landing_json.replace('\\', '/')
+        self.open_data_api_key = open_data_api_key
         self.hdfs_host = hdfs_host
         self.hdfs_port = hdfs_port
         self.hdfs_user = hdfs_user
@@ -160,18 +167,15 @@ class DataCollector:
             # Upload JSON file to HDFS directory
             self.upload_file_to_hdfs(filepath, data_bytes, hdfs_dir_path)
 
-    def download_from_opendata_API_to_hdfs(self):
-        # Replace <YOUR_DATASET_ID> with the ID of the dataset you want to download
+    def download_from_opendata_api_to_hdfs(self):
+        # Replace dataset_id with the ID of the dataset you want to download
         dataset_id = 'est_vehicles_index_motor'
-
-        # Replace <YOUR_API_KEY> with your Open Data BCN API key
-        api_key = '0a08a88cdf46a8c6ad57afe06bd9913812b7ff530fe1361aaeea4701ef1c1dbd'
 
         # Set the URL of the API endpoint to download the dataset
         url = f'https://opendata-ajuntament.barcelona.cat/data/api/3/action/package_show?id={dataset_id}'
 
         # Set the headers for the API request
-        headers = {'Authorization': api_key}
+        headers = {'Authorization': self.open_data_api_key}
 
         # Send the API request to get information about the dataset
         response = requests.get(url, headers=headers)

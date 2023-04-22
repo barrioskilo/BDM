@@ -42,6 +42,9 @@ TEMPORAL_LANDING_DIR_PATH = os.getenv('TEMPORAL_LANDING_DIR_PATH')
 TEMPORAL_LANDING_CSV_DIR_PATH = os.getenv('TEMPORAL_LANDING_CSV_DIR_PATH')
 TEMPORAL_LANDING_JSON_DIR_PATH = os.getenv('TEMPORAL_LANDING_JSON_DIR_PATH')
 
+# Define API authentication key for Open Data BCN API
+OPEN_DATA_API_KEY = os.getenv('OPEN_DATA_API_KEY')
+
 # Define HDFS connection parameters from environment variables
 HDFS_HOST = os.getenv('HDFS_HOST')
 HDFS_PORT = os.getenv('HDFS_PORT')
@@ -57,6 +60,7 @@ def main():
                 TEMPORAL_LANDING_DIR_PATH,
                 TEMPORAL_LANDING_CSV_DIR_PATH,
                 TEMPORAL_LANDING_JSON_DIR_PATH,
+                OPEN_DATA_API_KEY,
                 HDFS_HOST,
                 HDFS_PORT,
                 HDFS_USER,
@@ -65,7 +69,7 @@ def main():
         # Run the data collection functions
         data_collector.upload_csv_files_to_hdfs(TEMPORAL_LANDING_CSV_DIR_PATH)
         data_collector.upload_json_files_to_hdfs(TEMPORAL_LANDING_JSON_DIR_PATH)
-        data_collector.download_from_opendata_API_to_hdfs()
+        data_collector.download_from_opendata_api_to_hdfs()
 
 
         logger.info('Data collection completed successfully.')
