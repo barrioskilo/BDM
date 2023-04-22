@@ -97,16 +97,30 @@ def main():
 
         try:
             # Initialize a PersistenceLoader instance
-            persistence_loader = PersistenceLoader(HDFS_HBASE_HOST, HBASE_PORT, logger)
+            persistence_loader = PersistenceLoader(
+                HDFS_HBASE_HOST,
+                HBASE_PORT,
+                HDFS_PORT,
+                HDFS_USER,
+                TEMPORAL_LANDING_DIR_PATH,
+                TEMPORAL_LANDING_CSV_DIR_PATH,
+                TEMPORAL_LANDING_JSON_DIR_PATH,
+                logger)
+
+            # Run the persistence loader functions per source
+
             persistence_loader.load_opendatabcn_income()
             persistence_loader.load_veh_index_motoritzacio()
-            persistence_loader.load_lookup_tables()
-            persistence_loader.load_idealista()
+            #persistence_loader.load_lookup_tables()
+            #persistence_loader.load_idealista()
+
+            # Terminate connection with HBase
+            persistence_loader.close()
 
             logger.info('Persistence Loading completed successfully.')
 
         except Exception as e:
-
+            persistence_loader.close()
             logger.exception(f'Error occurred during persistence loading: {e}')
 
 
