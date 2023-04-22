@@ -111,8 +111,8 @@ def main():
 
             #persistence_loader.load_opendatabcn_income()
             #persistence_loader.load_veh_index_motoritzacio()
-            persistence_loader.load_lookup_tables()
-            #persistence_loader.load_idealista()
+            #persistence_loader.load_lookup_tables()
+            persistence_loader.load_idealista()
 
             # Terminate connection with HBase
             persistence_loader.close()
@@ -120,7 +120,6 @@ def main():
             logger.info('Persistence Loading completed successfully.')
 
         except Exception as e:
-            persistence_loader.close()
             logger.exception(f'Error occurred during persistence loading: {e}')
 
 

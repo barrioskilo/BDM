@@ -19,14 +19,15 @@
   - Insert the raw data source files inside the appropriate folder.
 - Add a `.env` file inside BDM folder, including the following parameters with their appropriate values:
   - ```
-    HDFS_HOST='...' # Change This
+    HDFS_HBASE_HOST='....' #Change This
     HDFS_PORT=9870
-    HDFS_USER='...' # Change This
+    HBASE_PORT=9090
+    HDFS_USER='....' #Change This
     GLOBAL_DATA_DIR_PATH='./data_sources'
     TEMPORAL_LANDING_DIR_PATH = '/temporal_landing'
     TEMPORAL_LANDING_CSV_DIR_PATH= 'temporal_landing_CSV'
     TEMPORAL_LANDING_JSON_DIR_PATH= 'temporal_landing_JSON'
-    OPEN_DATA_API_KEY= '...' # Change This
+    OPEN_DATA_API_KEY= '...' #Change This
     ```
 - For executing `data-collection` functionality in order to move data from the local machine or the Open Data BCN API to HDFS, make use of the following command:
   - ``` 

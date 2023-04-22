@@ -68,9 +68,12 @@ class DataCollector:
         self.hdfs_port = hdfs_port
         self.hdfs_user = hdfs_user
         self.logger = logger
-        self.client = InsecureClient(f'http://{self.hdfs_host}:{self.hdfs_port}', user=self.hdfs_user)
-        self.logger.info(f"Connection to HDFS has been established successfully.")
-        self.create_hdfs_dir(os.path.join(self.temporal_landing_dir))
+        try:
+            self.client = InsecureClient(f'http://{self.hdfs_host}:{self.hdfs_port}', user=self.hdfs_user)
+            self.logger.info(f"Connection to HDFS has been established successfully.")
+            self.create_hdfs_dir(os.path.join(self.temporal_landing_dir))
+        except Exception as e:
+            self.client.close()
 
     def create_hdfs_dir(self, folder):
         """
@@ -79,12 +82,15 @@ class DataCollector:
             Args:
                 folder (str): The name of the directory to create.
         """
-        if self.client.status(folder, strict=False) is None:
-            # Create directory
-            self.client.makedirs(folder)
-            self.logger.info(f"Directory {folder} created successfully.")
-        else:
-            self.logger.info(f"Directory {folder} already exists.")
+        try:
+            if self.client.status(folder, strict=False) is None:
+                # Create directory
+                self.client.makedirs(folder)
+                self.logger.info(f"Directory {folder} created successfully.")
+            else:
+                self.logger.info(f"Directory {folder} already exists.")
+        except Exception as e:
+            self.client.close()
 
     def upload_file_to_hdfs(self, filepath, data_bytes, hdfs_dir_path):
         """
@@ -98,12 +104,15 @@ class DataCollector:
         Returns:
             None.
         """
-        hdfs_file_path = os.path.join(hdfs_dir_path, os.path.basename(filepath)).replace('\\', '/')
-        with self.client.write(hdfs_file_path, overwrite=True) as writer:
-            writer.write(data_bytes)
+        try:
+            hdfs_file_path = os.path.join(hdfs_dir_path, os.path.basename(filepath)).replace('\\', '/')
+            with self.client.write(hdfs_file_path, overwrite=True) as writer:
+                writer.write(data_bytes)
 
-        filepath = filepath.replace('\\', '/')
-        self.logger.info(f"File {filepath} uploaded to {hdfs_file_path} successfully.")
+            filepath = filepath.replace('\\', '/')
+            self.logger.info(f"File {filepath} uploaded to {hdfs_file_path} successfully.")
+        except Exception as e:
+            self.client.close()
 
     def upload_csv_files_to_hdfs(self, hdfs_dir):
         """
@@ -112,28 +121,31 @@ class DataCollector:
             Args:
                 hdfs_dir (str): The HDFS directory to upload the CSV files to.
         """
-        # Get a list of all CSV files in the directory
-        csv_files = glob.glob(os.path.join(self.global_data_dir, '**/*.csv').replace('\\', '/'), recursive=True)
+        try:
+            # Get a list of all CSV files in the directory
+            csv_files = glob.glob(os.path.join(self.global_data_dir, '**/*.csv').replace('\\', '/'), recursive=True)
 
-        # Check if directory exists
-        temp_csv_dir = os.path.join(self.temporal_landing_dir, hdfs_dir).replace('\\', '/')
-        self.create_hdfs_dir(temp_csv_dir)
+            # Check if directory exists
+            temp_csv_dir = os.path.join(self.temporal_landing_dir, hdfs_dir).replace('\\', '/')
+            self.create_hdfs_dir(temp_csv_dir)
 
-        # Loop through CSV files in local directory
-        for filepath in csv_files:
-            dirname = os.path.dirname(filepath).replace('\\', '/')
-            folder_name = dirname.split('/')[-1]
-            hdfs_dir_path = os.path.join(temp_csv_dir, folder_name).replace('\\', '/')
-            self.create_hdfs_dir(hdfs_dir_path)
+            # Loop through CSV files in local directory
+            for filepath in csv_files:
+                dirname = os.path.dirname(filepath).replace('\\', '/')
+                folder_name = dirname.split('/')[-1]
+                hdfs_dir_path = os.path.join(temp_csv_dir, folder_name).replace('\\', '/')
+                self.create_hdfs_dir(hdfs_dir_path)
 
-            # Load CSV file
-            with open(filepath, 'r', encoding='utf-8') as f:
-                csv_reader = csv.reader(f)
-                # Convert CSV data to bytes
-                data_bytes = bytes('\n'.join([','.join(row) for row in csv_reader]), encoding='utf-8')
+                # Load CSV file
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    csv_reader = csv.reader(f)
+                    # Convert CSV data to bytes
+                    data_bytes = bytes('\n'.join([','.join(row) for row in csv_reader]), encoding='utf-8')
 
-            # Upload CSV file to HDFS directory
-            self.upload_file_to_hdfs(filepath, data_bytes, hdfs_dir_path)
+                # Upload CSV file to HDFS directory
+                self.upload_file_to_hdfs(filepath, data_bytes, hdfs_dir_path)
+        except Exception as e:
+            self.client.close()
 
     def upload_json_files_to_hdfs(self, hdfs_dir):
         """
@@ -143,64 +155,71 @@ class DataCollector:
                 hdfs_dir (str): The HDFS directory to upload the JSON files to.
         """
 
-        # Get a list of all JSON files in the directory
-        json_files = glob.glob(os.path.join(self.global_data_dir, '**/*.json').replace('\\', '/'), recursive=True)
+        try:
+            # Get a list of all JSON files in the directory
+            json_files = glob.glob(os.path.join(self.global_data_dir, '**/*.json').replace('\\', '/'), recursive=True)
 
-        # Check if directory exists
-        temp_json_dir = os.path.join(self.temporal_landing_dir, hdfs_dir).replace('\\', '/')
-        self.create_hdfs_dir(temp_json_dir)
+            # Check if directory exists
+            temp_json_dir = os.path.join(self.temporal_landing_dir, hdfs_dir).replace('\\', '/')
+            self.create_hdfs_dir(temp_json_dir)
 
-        # Loop through JSON files in local directory
-        for filepath in json_files:
-            dirname = os.path.dirname(filepath).replace('\\', '/')
-            folder_name = dirname.split('/')[-1]
-            hdfs_dir_path = os.path.join(temp_json_dir, folder_name).replace('\\', '/')
-            self.create_hdfs_dir(hdfs_dir_path)
+            # Loop through JSON files in local directory
+            for filepath in json_files:
+                dirname = os.path.dirname(filepath).replace('\\', '/')
+                folder_name = dirname.split('/')[-1]
+                hdfs_dir_path = os.path.join(temp_json_dir, folder_name).replace('\\', '/')
+                self.create_hdfs_dir(hdfs_dir_path)
 
-            # Load JSON file
-            with open(filepath, 'r') as f:
-                data = json.load(f)
+                # Load JSON file
+                with open(filepath, 'r') as f:
+                    data = json.load(f)
 
-            # Convert JSON data to bytes
-            data_bytes = json.dumps(data).encode('utf-8')
+                # Convert JSON data to bytes
+                data_bytes = json.dumps(data).encode('utf-8')
 
-            # Upload JSON file to HDFS directory
-            self.upload_file_to_hdfs(filepath, data_bytes, hdfs_dir_path)
+                # Upload JSON file to HDFS directory
+                self.upload_file_to_hdfs(filepath, data_bytes, hdfs_dir_path)
+        except Exception as e:
+            self.client.close()
+
 
     def download_from_opendata_api_to_hdfs(self):
-        # Replace dataset_id with the ID of the dataset you want to download
-        dataset_id = 'est_vehicles_index_motor'
+        try:
+            # Replace dataset_id with the ID of the dataset you want to download
+            dataset_id = 'est_vehicles_index_motor'
 
-        # Set the URL of the API endpoint to download the dataset
-        url = f'https://opendata-ajuntament.barcelona.cat/data/api/3/action/package_show?id={dataset_id}'
+            # Set the URL of the API endpoint to download the dataset
+            url = f'https://opendata-ajuntament.barcelona.cat/data/api/3/action/package_show?id={dataset_id}'
 
-        # Set the headers for the API request
-        headers = {'Authorization': self.open_data_api_key}
+            # Set the headers for the API request
+            headers = {'Authorization': self.open_data_api_key}
 
-        # Send the API request to get information about the dataset
-        response = requests.get(url, headers=headers)
+            # Send the API request to get information about the dataset
+            response = requests.get(url, headers=headers)
 
-        # Get the name of the dataset from the response
-        resources = response.json()['result']['resources']
+            # Get the name of the dataset from the response
+            resources = response.json()['result']['resources']
 
-        for r in resources:
-            # Get the URL of the CSV file from the response
-            csv_url = r['url']
+            for r in resources:
+                # Get the URL of the CSV file from the response
+                csv_url = r['url']
 
-            # Get the name of our dataset
-            name = r['name']
+                # Get the name of our dataset
+                name = r['name']
 
-            # Check the extension according to the name
-            x = name.split(".")[0].split("_")[1:]
-            data_name_str = "_".join(x)  # merge the relevant parts into a single string
-            new_folder = os.path. \
-                join(self.temporal_landing_dir, self.temporal_landing_csv, data_name_str). \
-                replace('\\', '/')
-            self.create_hdfs_dir(new_folder)
+                # Check the extension according to the name
+                x = name.split(".")[0].split("_")[1:]
+                data_name_str = "_".join(x)  # merge the relevant parts into a single string
+                new_folder = os.path. \
+                    join(self.temporal_landing_dir, self.temporal_landing_csv, data_name_str). \
+                    replace('\\', '/')
+                self.create_hdfs_dir(new_folder)
 
-            # Download the CSV file and save it to disk
-            response = requests.get(csv_url)
+                # Download the CSV file and save it to disk
+                response = requests.get(csv_url)
 
-            filepath = os.path.join(new_folder, name).replace('\\', '/')
-            with self.client.write(filepath, overwrite=True) as writer:
-                writer.write(response.content)
+                filepath = os.path.join(new_folder, name).replace('\\', '/')
+                with self.client.write(filepath, overwrite=True) as writer:
+                    writer.write(response.content)
+        except Exception as e:
+            self.client.close()

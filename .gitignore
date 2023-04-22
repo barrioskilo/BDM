@@ -38,6 +38,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 # General Logs
 .logs/
+.logs/*
 
 # Unit test / coverage reports
 htmlcov/
