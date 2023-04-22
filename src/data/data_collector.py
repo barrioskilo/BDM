@@ -74,6 +74,7 @@ class DataCollector:
             self.create_hdfs_dir(os.path.join(self.temporal_landing_dir))
         except Exception as e:
             self.client.close()
+            self.logger.exception(e)
 
     def create_hdfs_dir(self, folder):
         """
@@ -91,6 +92,7 @@ class DataCollector:
                 self.logger.info(f"Directory {folder} already exists.")
         except Exception as e:
             self.client.close()
+            self.logger.exception(e)
 
     def upload_file_to_hdfs(self, filepath, data_bytes, hdfs_dir_path):
         """
@@ -113,6 +115,7 @@ class DataCollector:
             self.logger.info(f"File {filepath} uploaded to {hdfs_file_path} successfully.")
         except Exception as e:
             self.client.close()
+            self.logger.exception(e)
 
     def upload_csv_files_to_hdfs(self, hdfs_dir):
         """
@@ -146,6 +149,7 @@ class DataCollector:
                 self.upload_file_to_hdfs(filepath, data_bytes, hdfs_dir_path)
         except Exception as e:
             self.client.close()
+            self.logger.exception(e)
 
     def upload_json_files_to_hdfs(self, hdfs_dir):
         """
@@ -181,6 +185,7 @@ class DataCollector:
                 self.upload_file_to_hdfs(filepath, data_bytes, hdfs_dir_path)
         except Exception as e:
             self.client.close()
+            self.logger.exception(e)
 
 
     def download_from_opendata_api_to_hdfs(self):
@@ -223,3 +228,4 @@ class DataCollector:
                     writer.write(response.content)
         except Exception as e:
             self.client.close()
+            self.logger.exception(e)

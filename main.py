@@ -109,9 +109,9 @@ def main():
 
             # Run the persistence loader functions per source
 
-            #persistence_loader.load_opendatabcn_income()
-            #persistence_loader.load_veh_index_motoritzacio()
-            #persistence_loader.load_lookup_tables()
+            persistence_loader.load_opendatabcn_income()
+            persistence_loader.load_veh_index_motoritzacio()
+            persistence_loader.load_lookup_tables()
             persistence_loader.load_idealista()
 
             # Terminate connection with HBase

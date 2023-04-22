@@ -32,6 +32,7 @@ class PersistenceLoader:
         try:
             self.connect()
         except Exception as e:
+            self.logger.exception(e)
             self.close()
 
     def connect(self):
@@ -63,6 +64,7 @@ class PersistenceLoader:
                 self.logger.info(f"Table '{table_name}' created.")
         except Exception as e:
             self.close()
+            self.logger.exception(e)
 
 
     def load_opendatabcn_income(self):
@@ -124,6 +126,7 @@ class PersistenceLoader:
                         self.logger.info(f"Imported {num_rows} rows into table '{table_name}' from file: {filename}.")
         except Exception as e:
             self.close()
+            self.logger.exception(e)
 
     def load_veh_index_motoritzacio(self):
         try:
@@ -184,6 +187,7 @@ class PersistenceLoader:
                         self.logger.info(f"Imported {num_rows} rows into table '{table_name}' from file: {filename}.")
         except Exception as e:
             self.close()
+            self.logger.exception(e)
 
     def load_lookup_tables(self):
         try:
@@ -245,6 +249,7 @@ class PersistenceLoader:
                         self.logger.info(f"Imported {num_rows} rows into table '{table_name}' from file: {filename}.")
         except Exception as e:
             self.close()
+            self.logger.exception(e)
 
     def load_idealista(self):
         try:
@@ -289,3 +294,4 @@ class PersistenceLoader:
                         self.logger.info(f"Imported {num_rows} rows into table '{table_name}' from file: {filename}.")
         except Exception as e:
             self.close()
+            self.logger.exception(e)
