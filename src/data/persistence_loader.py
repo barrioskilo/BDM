@@ -1,3 +1,4 @@
+import csv
 import datetime
 import json
 import happybase
@@ -5,6 +6,13 @@ import logging
 import os
 import re
 from hdfs import InsecureClient
+
+
+def extract_timestamp_from_filename(file_name):
+    date_str = re.search(r'\d{4}\d{2}\d{2}', file_name).group(0)
+    # Convert date string to timestamp using datetime module
+    ts = datetime.datetime.strptime(date_str, '%Y_%m_%d').timestamp()
+    return str(int(ts))
 
 
 class PersistenceLoader:
@@ -37,19 +45,17 @@ class PersistenceLoader:
             self.connection = None
             self.logger.info("HBase connection closed")
 
-    def extract_timestamp_from_filename(file_name):
-        date_str = re.search(r'\d{4}\d{2}\d{2}', file_name).group(0)
-        # Convert date string to timestamp using datetime module
-        ts = datetime.datetime.strptime(date_str, '%Y_%m_%d').timestamp()
-        return str(int(ts))
-
-    def create_table(self, table_name):
+    def create_table(self, table_name, flag=False):
         # Check if the table exists
         if table_name.encode() in self.connection.tables():
             self.logger.info(f"Table '{table_name}' already exists.")
-        else:
+        elif not flag:
             # Create the table with 'data' and 'metadata' column families
             self.connection.create_table(table_name, {'data': {}, 'metadata': {}})
+            self.logger.info(f"Table '{table_name}' created.")
+        else:
+            # Create the table with 'idealista_data', 'income_data', 'metadata' column families
+            self.connection.create_table(table_name, {'idealista_data': {}, 'income_data': {}, 'metadata': {}})
             self.logger.info(f"Table '{table_name}' created.")
 
     def load_opendatabcn_income(self):
@@ -68,27 +74,28 @@ class PersistenceLoader:
             if filename.endswith('.csv'):
                 with self.hdfs_client.read(os.path.join(csv_dir, filename).replace('\\', '/'), encoding='utf-8') as f:
                     # Iterate over the rows in the CSV file
+                    reader = csv.reader(f, delimiter=',', quotechar='"')
                     num_rows = 0
                     column_names = []
-                    for line in f:
+                    for row in reader:
 
                         if num_rows == 0:
-                            column_names = [col.strip() for col in line.split(',')]
+                            column_names = row
                             num_rows += 1
                             continue
 
                         # Parse the row and construct the row key
-                        valid_year = line.split(',')[0]
-                        district_code = line.split(',')[1]
-                        neighborhood_code = line.split(',')[3]
+                        valid_year = row[0]
+                        district_code = row[1]
+                        neighborhood_code = row[3]
                         row_key = f"{table_name}_{district_code}_{neighborhood_code}_{valid_year}"
 
                         # Construct a dictionary of column name to value
                         data_dict = {
-                            'data:District_Name': line.split(',')[2].encode('utf-8'),
-                            'data:Neighborhood_Name': line.split(',')[4].encode('utf-8'),
-                            'data:Population': line.split(',')[5].encode('utf-8'),
-                            'data:Index RFD Barcelona = 100': line.split(',')[6].encode('utf-8'),
+                            'data:District_Name': row[2].encode('utf-8'),
+                            'data:Neighborhood_Name': row[4].encode('utf-8'),
+                            'data:Population': row[5].encode('utf-8'),
+                            'data:Index RFD Barcelona = 100': row[6].encode('utf-8'),
                         }
 
                         # Insert the data into HBase
@@ -123,28 +130,29 @@ class PersistenceLoader:
             if filename.endswith('.csv'):
                 with self.hdfs_client.read(os.path.join(csv_dir, filename).replace('\\', '/'), encoding='utf-8') as f:
                     # Iterate over the rows in the CSV file
+                    reader = csv.reader(f, delimiter=',', quotechar='"')
                     num_rows = 0
                     column_names = []
-                    for line in f:
+                    for row in reader:
 
                         if num_rows == 0:
-                            column_names = [col.strip() for col in line.split(',')]
+                            column_names = row
                             num_rows += 1
                             continue
 
                         # Parse the row and construct the row key
-                        valid_year = line.split(',')[0]
-                        district_code = line.split(',')[1]
-                        neighborhood_code = line.split(',')[3]
+                        valid_year = row[0]
+                        district_code = row[1]
+                        neighborhood_code = row[3]
                         row_key = f"{table_name}_{district_code}_{neighborhood_code}_{valid_year}"
 
                         # Construct a dictionary of column name to value
                         data_dict = {
-                            'data:District_Name': line.split(',')[2].encode('utf-8'),
-                            'data:Neighborhood_Name': line.split(',')[4].encode('utf-8'),
-                            'data:Seccio_Censal': line.split(',')[5].encode('utf-8'),
-                            'data:Tipus_Vehicle': line.split(',')[6].encode('utf-8'),
-                            'data:Index_Motoritzacio': line.split(',')[7].encode('utf-8'),
+                            'data:District_Name': row[2].encode('utf-8'),
+                            'data:Neighborhood_Name': row[4].encode('utf-8'),
+                            'data:Seccio_Censal': row[5].encode('utf-8'),
+                            'data:Tipus_Vehicle': row[6].encode('utf-8'),
+                            'data:Index_Motoritzacio': row[7].encode('utf-8'),
                         }
 
                         # Insert the data into HBase
@@ -165,7 +173,62 @@ class PersistenceLoader:
                     self.logger.info(f"Imported {num_rows} rows into table '{table_name}' from file: {filename}.")
 
     def load_lookup_tables(self):
-        print(self.host)
+        # Create a table for the data source
+        table_name = 'lookup_tables'
+        self.create_table(table_name, True)
+
+        # Get a handle to the table
+        table = self.connection.table(table_name)
+
+        # Iterate over the CSV files in the temporal landing zone
+        csv_dir = os.path.join(self.temporal_landing_dir, self.temporal_landing_csv, table_name).replace('\\', '/')
+        filenames = self.hdfs_client.list(csv_dir)
+        for filename in filenames:
+            if filename.endswith('.csv'):
+                source_name = filename.split('_')[0]
+                with self.hdfs_client.read(os.path.join(csv_dir, filename).replace('\\', '/'), encoding='utf-8') as f:
+                    # Iterate over the rows in the CSV file
+                    reader = csv.reader(f, delimiter=',', quotechar='"')
+                    num_rows = 0
+                    column_names = []
+                    for row in reader:
+
+                        if num_rows == 0:
+                            column_names = row
+                            num_rows += 1
+                            continue
+
+                        # Parse the row and construct the row key
+                        district_id = row[4]
+                        neighborhood_id = row[7]
+                        row_key = f"{table_name}_{district_id}_{neighborhood_id}"
+
+                        # Construct a dictionary of column name to value
+                        data_dict = {
+                            f'{source_name}_data:district': row[0].encode('utf-8'),
+                            f'{source_name}_data:neighborhood': row[1].encode('utf-8'),
+                            f'{source_name}_data:district_n_reconciled': row[2].encode('utf-8'),
+                            f'{source_name}_data:district_n': row[3].encode('utf-8'),
+                            f'{source_name}_data:neighborhood_n_reconciled': row[5].encode('utf-8'),
+                            f'{source_name}_data:neighborhood_n': row[6].encode('utf-8'),
+                        }
+
+                        # Insert the data into HBase
+                        table.put(row_key.encode('utf-8').strip(), data_dict)
+
+                        # Update metadata
+                        num_rows += 1
+
+                    # Insert metadata into HBase
+                    metadata_dict = {
+                        'metadata:num_rows': str(num_rows - 1).encode('utf-8'),
+                        'metadata:num_cols': str(len(column_names)).encode('utf-8'),
+                        'metadata:column_names': (','.join(column_names)).encode('utf-8'),
+                        'metadata:ingestion_date': (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                                                    ).encode('utf-8')
+                    }
+                    table.put(f"{table_name}_{source_name}_metadata".encode('utf-8'), metadata_dict)
+                    self.logger.info(f"Imported {num_rows} rows into table '{table_name}' from file: {filename}.")
 
     def load_idealista(self):
         print(self.host)
