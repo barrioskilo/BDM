@@ -30,13 +30,11 @@
     OPEN_DATA_API_KEY= '...' #Change This
     ```
 - For executing `data-collection` functionality in order to move data from the local machine or the Open Data BCN API to HDFS, make use of the following command:
-  - 
-  ``` 
+  - ``` 
     python main.py data-collection
     ```
 - Otherwise, for executing `persistence-loading` functionality in order to move the available data of the `Temporal Landing Zone` to the `Persistence Landing Zone`, use the following command:
-  - 
-  ```
+  - ```
     python main.py persistence-loading
     ```
 
